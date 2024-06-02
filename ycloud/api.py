@@ -51,3 +51,6 @@ class YandexCloud:
         self.iam_value = response.json()['iamToken']
         self.iam_valid_until = now + 3600
         return self.iam_value
+
+    def get_folder_id(self):
+        return self.data['folder_id']
