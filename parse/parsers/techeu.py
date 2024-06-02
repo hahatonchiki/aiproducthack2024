@@ -57,7 +57,7 @@ def fetch_news(min_date, max_date) -> Tuple[List[NewsLetter], bool]:
             break
         resp_text = response.json()['html']
         i += 1
-
+    news = list(filter(lambda x: x.date <= max_date, news))
     return news, True
 
 
