@@ -12,7 +12,9 @@ sites = {
     "Habr": "https://habr.com/ru/rss/news/rated25/?fl=ru&limit=100",
     "Kommersant": "https://www.kommersant.ru/RSS/news.xml",
     "Vedomosti": "https://www.vedomosti.ru/rss/news",
+    "Interfax": "https://www.interfax.ru/rss.asp"
 }
+
 
 # Функция для парсинга новостей с каждого сайта
 
@@ -49,7 +51,8 @@ def parse_news(site_name, url):
                 if text:
                     text = text.find('p')
                     if text:
-                        news_list.append([title.get_text(), link.get_text(), date.get_text(), text.get_text(strip=True)])
+                        news_list.append(
+                            [title.get_text(), link.get_text(), date.get_text(), text.get_text(strip=True)])
 
     elif site_name == "Habr":
         articles = soup.find_all('item')
@@ -66,6 +69,18 @@ def parse_news(site_name, url):
         for article in articles:
             category = article.find('category')
             if category and category.get_text() in ['Телекоммуникации', 'Бизнес', 'Hi-Tech']:
+                title = article.find('title')
+                link = article.find('link')
+                date = article.find('pubDate')
+                text = article.find('description')
+                if title and link and date and text:
+                    news_list.append([title.get_text(), link.get_text(), date.get_text(), text.get_text().strip()])
+
+    elif site_name == 'Interfax':
+        articles = soup.find_all('item')
+        for article in articles:
+            category = article.find('category')
+            if category and category.get_text() == 'Экономика':
                 title = article.find('title')
                 link = article.find('link')
                 date = article.find('pubDate')
@@ -90,7 +105,8 @@ def parse_news(site_name, url):
                         if text:
                             text = text.find('p', class_='box-paragraph__text')
                             if text:
-                                news_list.append([title.get_text(), link.get_text(), date.get_text(), text.get_text(strip=True)])
+                                news_list.append(
+                                    [title.get_text(), link.get_text(), date.get_text(), text.get_text(strip=True)])
 
     return news_list
 
