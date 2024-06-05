@@ -58,7 +58,7 @@ def fetch_news(min_date, max_date) -> Tuple[List[NewsLetter], bool]:
         resp_text = response.json()['html']
         i += 1
     news = list(filter(lambda x: x.date <= max_date, news))
-    return news, True
+    return news, len(news) > 0
 
 
 if __name__ == "__main__":
