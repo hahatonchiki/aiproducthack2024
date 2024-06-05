@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 import pytz
 
-name = 'habr'
+name = ''
 
 if __name__ == "__main__":
     if name == 'cnews_biz':
@@ -24,8 +24,8 @@ if __name__ == "__main__":
         print('Неверно введено имя файла')
         sys.exit()
 
-    start_date = datetime.datetime.strptime("2024-05-30", "%Y-%m-%d").replace(tzinfo=pytz.timezone('Europe/Moscow'))
-    end_date = datetime.datetime.strptime("2024-06-05", "%Y-%m-%d").replace(tzinfo=pytz.timezone('Europe/Moscow'))
+    start_date = datetime.datetime.strptime("2024-05-30", "%Y-%m-%d").replace(tzinfo=None)
+    end_date = datetime.datetime.strptime("2024-06-05", "%Y-%m-%d").replace(tzinfo=None)
     res, success = fetch_news(start_date, end_date)
 
     if not success:
@@ -34,25 +34,41 @@ if __name__ == "__main__":
         fetch_newsletter_texts(res)
         data = []
         for newsletter in res:
-            data.append({
-                'Title': newsletter.title,
-                'Content': newsletter.content,
-                'Language': newsletter.language,
-                'Source': newsletter.source,
-                'Date': newsletter.date.strftime("%Y-%m-%d %H:%M:%S%z"),  # Форматирование даты
-                'URL': newsletter.url,
-                'Parsed_At': newsletter.parsed_at
-            })
+
+            data.append([newsletter.title,
+                         newsletter.content,
+                         newsletter.language,
+                         newsletter.source,
+                         newsletter.date.strftime("%Y-%m-%d %H:%M:%S%z"),
+                         newsletter.url,
+                         newsletter.parsed_at
+                         ]
+                        )
+
+            # data.append({
+            #     'Title': newsletter.title,
+            #     'Content': newsletter.content,
+            #     'Language': newsletter.language,
+            #     'Source': newsletter.source,
+            #     'Date': newsletter.date.strftime("%Y-%m-%d %H:%M:%S%z"),  # Форматирование даты
+            #     'URL': newsletter.url,
+            #     'Parsed_At': newsletter.parsed_at
+            # })
 
         # Выводим данные в консоль для проверки
-        for item in data:
-            print(item)
+        # for item in data:
+        #     print(item)
+        #
+        # df = pd.DataFrame(data)
 
-        df = pd.DataFrame(data)
-        try:
-            file = pd.read_csv('ru_news.csv')
-            df.to_csv('ru_news.csv', mode='a', index=False, header=False)
-        except Exception as e:
-            print(f"Failed to append to CSV file: {e}")
-            df.to_csv('ru_news.csv', mode='a', index=False, header=True)
+        print(data)
+
+        # Добавление результата в csv файл
+
+        # try:
+        #     file = pd.read_csv('ru_news.csv')
+        #     df.to_csv('ru_news.csv', mode='a', index=False, header=False)
+        # except Exception as e:
+        #     print(f"Failed to append to CSV file: {e}")
+        #     df.to_csv('ru_news.csv', mode='a', index=False, header=True)
 
