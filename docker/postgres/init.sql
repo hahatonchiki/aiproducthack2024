@@ -1,0 +1,17 @@
+CREATE SCHEMA IF NOT EXISTS news;
+
+-- Create the news table
+CREATE TABLE IF NOT EXISTS news.news (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    published_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create the users table
+CREATE TABLE IF NOT EXISTS news.users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

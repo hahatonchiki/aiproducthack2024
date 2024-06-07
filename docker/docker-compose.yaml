@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres_db
+    build:
+      context: ./postgres
+    env_file: ./postgres/.env
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres_network
+
+networks:
+  postgres_network:
+    driver: bridge
