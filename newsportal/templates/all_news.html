@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Все новости{% endblock %}
+
+{% block content %}
+    <h1>Все новости</h1>
+    <div class="list-group">
+        {% for news in news_list %}
+            <a href="{% url 'news_detail' news.id %}"
+               class="list-group-item list-group-item-action">
+                <h5>{{ news.title }}</h5>
+                <p>{{ news.summary }}</p>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}

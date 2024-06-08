@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<h1>Добро пожаловать на наш сайт новостей</h1>
+<a href="{% url 'all_news' %}" class="btn btn-primary">Все новости</a>
+<a href="{% url 'all_digests' %}" class="btn btn-secondary">Все дайджесты</a>
+{% endblock %}

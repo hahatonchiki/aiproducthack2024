@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Все дайджесты{% endblock %}
+
+{% block content %}
+<h1>Все дайджесты</h1>
+<div class="list-group">
+    {% for digest in digests %}
+        <a href="{% url 'digest_detail' digest.id %}" class="list-group-item list-group-item-action">
+            <h5>Дайджест с {{ digest.start_date }} по {{ digest.end_date }}</h5>
+        </a>
+    {% endfor %}
+</div>
+{% endblock %}
