@@ -4,13 +4,14 @@ from django.contrib.postgres.fields import ArrayField
 
 class News(models.Model):
     id = models.AutoField(primary_key=True)
-    title = models.CharField(max_length=255)
+    title = models.TextField()
     content = models.TextField()
     summary = models.TextField(default='')
     published_at = models.DateTimeField()
     source = models.CharField(max_length=255)
     url = models.URLField(max_length=255)
-    vectorized_content = ArrayField(models.FloatField(), default=list)
+    vectorized_content = ArrayField(models.FloatField(), default=list,
+                                    null=True)
     lang = models.CharField(max_length=2, default='ru')
     is_vectorized = models.BooleanField(default=False)
     is_translated = models.BooleanField(default=False)
@@ -20,7 +21,7 @@ class News(models.Model):
         return self.title
 
     class Meta:
-        db_table = 'news_news'
+        db_table = 'news'
 
 
 class Prompt(models.Model):
