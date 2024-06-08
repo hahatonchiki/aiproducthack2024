@@ -1,14 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Все дайджесты{% endblock %}
+{% block title %}Дайджест {{ digest.id }}{% endblock %}
 
 {% block content %}
-<h1>Все дайджесты</h1>
-<div class="list-group">
-    {% for digest in digests %}
-        <a href="{% url 'digest_detail' digest.id %}" class="list-group-item list-group-item-action">
-            <h5>Дайджест с {{ digest.start_date }} по {{ digest.end_date }}</h5>
-        </a>
-    {% endfor %}
-</div>
+    <h1>Дайджест с {{ digest.start_date }} по {{ digest.end_date }}</h1>
+    <div class="list-group">
+        {% for news in news_list %}
+            <a href="{% url 'news_detail' news.id %}"
+               class="list-group-item list-group-item-action">
+                <h5>{{ news.title }}</h5>
+                <p>{{ news.summary }}</p>
+            </a>
+        {% endfor %}
+    </div>
+    <a href="{% url 'all_digests' %}" class="btn btn-primary">Назад ко всем
+        дайджестам</a>
 {% endblock %}
