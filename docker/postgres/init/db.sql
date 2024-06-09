@@ -1,0 +1,2 @@
+CREATE DATABASE alchemy;
+CREATE DATABASE news;
