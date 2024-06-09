@@ -10,8 +10,7 @@ class News(models.Model):
     published_at = models.DateTimeField()
     source = models.CharField(max_length=255)
     url = models.URLField(max_length=255)
-    vectorized_content = ArrayField(models.FloatField(), default=list,
-                                    null=True)
+    vectorized_content = ArrayField(models.FloatField(), default=list)
     lang = models.CharField(max_length=2, default='ru')
     is_vectorized = models.BooleanField(default=False)
     is_translated = models.BooleanField(default=False)
