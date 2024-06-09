@@ -6,7 +6,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from parse.news import NewsLetter
+from . import NewsLetter
 
 
 def get_newsletter_text(url):

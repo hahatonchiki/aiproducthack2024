@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 import pandas as pd
 
-from parse.news import NewsLetter
+from . import NewsLetter
 
 
 def get_from_json(json_obj):
