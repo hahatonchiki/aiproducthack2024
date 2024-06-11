@@ -34,12 +34,10 @@ async def parse_page(session, soup):
         date = parse_date(
             article.find("p", class_="text-2 news-list-card__date").text)
         tasks.append((title, date, url, get_content(session, url)))
-
     for title, date, url, content_task in tasks:
         content = await content_task
         news.append(NewsLetter(title, content, "ru", "Северсталь", date, url,
                                datetime.now()))
-
     return news
 
 
@@ -68,14 +66,14 @@ def parse_date(date):
 
 async def fetch_page(session, url):
     async with session.get(url, ssl=False) as response:
-        if response.status != 200:
+        if not response.ok:
             return []
         text = await response.text()
         soup = BeautifulSoup(text, "html.parser")
         return await parse_page(session, soup)
 
 
-async def fetch_news(min_date, max_date) -> Tuple[List[NewsLetter], bool]:
+def fetch_news(min_date: datetime, max_date: datetime) -> Tuple[List[NewsLetter], bool]:
     min_date_str = min_date.strftime("%Y-%m-%d")
     max_date_str = max_date.strftime("%Y-%m-%d")
     base_url = f"https://severstal.com/rus/media/archive/?dateFrom={min_date_str}&dateTo={max_date_str}"
@@ -84,31 +82,22 @@ async def fetch_news(min_date, max_date) -> Tuple[List[NewsLetter], bool]:
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
 
-    connector = aiohttp.TCPConnector(ssl=ssl_context)
+    async def async_fetch_news():
+        connector = aiohttp.TCPConnector(ssl=ssl_context)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            async with session.get(base_url, ssl=False) as response:
+                if not response.ok:
+                    return [], False
+                text = await response.text()
+                soup = BeautifulSoup(text, "html.parser")
+                max_page = get_max_page(soup)
+                tasks = [fetch_page(session, base_url)]
+                for i in range(2, max_page + 1):
+                    url = f"{base_url}&PAGEN_1={i}"
+                    tasks.append(fetch_page(session, url))
+                results = await asyncio.gather(*tasks)
+                news = [item for sublist in results for item in sublist]
+                return news, True
 
-    async with aiohttp.ClientSession(connector=connector) as session:
-        async with session.get(base_url, ssl=False) as response:
-            if response.status != 200:
-                return [], False
-            text = await response.text()
-            soup = BeautifulSoup(text, "html.parser")
-            max_page = get_max_page(soup)
-
-            tasks = [fetch_page(session, base_url)]
-            for i in range(2, max_page + 1):
-                url = f"{base_url}&PAGEN_1={i}"
-                tasks.append(fetch_page(session, url))
-
-            results = await asyncio.gather(*tasks)
-            news = [item for sublist in results for item in sublist]
-
-            return news, True
-
-
-news, success = asyncio.run(
-    fetch_news(datetime(2024, 4, 1), datetime(2024, 7, 31)))
-if success:
-    for item in news:
-        print(item)
-else:
-    print("Failed to fetch news")
+    news, success = asyncio.run(async_fetch_news())
+    return news, success

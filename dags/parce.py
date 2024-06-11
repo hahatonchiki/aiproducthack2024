@@ -7,7 +7,6 @@ from os.path import basename, dirname, isfile, join
 import pandas as pd
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.operators.dummy import DummyOperator  # noqa
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.trigger_rule import TriggerRule
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -28,7 +27,8 @@ def import_parsers():
                     isfile(f) and not f.endswith('__init__.py')]
     for file in module_names:
         mod = importlib.import_module(f"parsers.{file}")
-        parser_functions[file] = getattr(mod, 'fetch_news')
+        if hasattr(mod, 'fetch_news'):
+            parser_functions[file] = getattr(mod, 'fetch_news')
     return parser_functions
 
 
@@ -73,8 +73,14 @@ def get_end_of_yesterday():
     return end_of_yesterday
 
 
-start_task = DummyOperator(task_id='start', dag=dag)
-
+task_cleanup_before = PythonOperator(
+    task_id='cleanup_before',
+    python_callable=lambda **kwargs: os.makedirs(
+        f'/tmp/newsletters/{kwargs["run_id"]}',
+        exist_ok=True),
+    trigger_rule=TriggerRule.ALL_DONE,
+    dag=dag
+)
 with TaskGroup(group_id='parse_and_save_group',
                dag=dag) as parse_and_save_group:
     for name, fetch_news_func in parsers.items():
@@ -89,7 +95,7 @@ with TaskGroup(group_id='parse_and_save_group',
             },
             dag=dag,
         )
-        start_task >> parse_and_save_task
+        task_cleanup_before >> parse_and_save_task
 
 
 def combine_csv(**kwargs):
@@ -103,7 +109,7 @@ def combine_csv(**kwargs):
 combine_csv_task = PythonOperator(
     task_id='combine_csv',
     python_callable=combine_csv,
-    trigger_rule=TriggerRule.ONE_SUCCESS,
+    trigger_rule=TriggerRule.ALL_DONE,
     dag=dag
 )
 
@@ -133,20 +139,11 @@ def cleanup_files(**kwargs):
     os.rmdir(temp_dir)
 
 
-# task_cleanup_after = PythonOperator(
-#     task_id='cleanup_after',
-#     python_callable=cleanup_files,
-#     trigger_rule=TriggerRule.ONE_SUCCESS,
-#     dag=dag
-# )
-task_cleanup_before = PythonOperator(
-    task_id='cleanup_before',
-    python_callable=lambda **kwargs: os.makedirs(
-        f'/tmp/newsletters/{kwargs["run_id"]}',
-        exist_ok=True),
-    trigger_rule=TriggerRule.ALWAYS,
+task_cleanup_after = PythonOperator(
+    task_id='cleanup_after',
+    python_callable=cleanup_files,
+    trigger_rule=TriggerRule.ALL_DONE,
     dag=dag
 )
 
-task_cleanup_before >> parse_and_save_group >> combine_csv_task >> task_upload_to_postgres
-# >> task_cleanup_after
+task_cleanup_before >> parse_and_save_group >> combine_csv_task >> task_upload_to_postgres >> task_cleanup_after

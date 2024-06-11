@@ -34,8 +34,8 @@ def load_news(**kwargs):
               index_label="index")
 
 
-max_vectorize = 200
-max_translate = int(1e9)
+max_vectorize = int(1e9)
+max_translate = 0
 
 ycloudcreds = Variable.get("yandexapisecret", deserialize_json=True)
 
@@ -45,8 +45,11 @@ def translate_ans_vectorize_news(**kwargs):
     gpt = GPT(ycloudcreds)
     df = pd.read_csv(f'/tmp/newsletters/{kwargs["run_id"]}/news.csv',
                      index_col="index")
+    df['content'] = df['content'].fillna('')
     df['is_translated'] = df['is_translated'] | (df['lang'] == 'ru')
-    to_translate = df[~df["is_translated"]].head(max_vectorize)
+    to_translate = df[
+        ~df["is_translated"] & (df['content'].str.len() > 0)].head(
+        max_translate)
     to_translate["content"] = asyncio.run(
         translator.translate_series(to_translate["content"], 'ru',
                                     is_html=False))

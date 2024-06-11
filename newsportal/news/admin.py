@@ -1,7 +1,35 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-from .models import Digest, Email, Prompt
+from .models import Digest, Email, News, Prompt
+
+
+@admin.register(News)
+class NewsAdmin(admin.ModelAdmin):
+    from django.contrib import admin
+
+    class NewsAdmin(admin.ModelAdmin):
+        list_display = (
+            'id', 'title', 'published_at', 'source', 'lang', 'is_public')
+        list_filter = ('published_at', 'source', 'lang', 'is_public')
+        search_fields = ('title', 'content', 'source')
+        ordering = ('-published_at',)
+        readonly_fields = (
+            'id', 'vectorized_content', 'is_vectorized', 'is_translated')
+
+        fieldsets = (
+            (None, {
+                'fields': (
+                    'title', 'content', 'summary', 'published_at', 'source',
+                    'url',
+                    'lang', 'is_public')
+            }),
+            ('Advanced options', {
+                'classes': ('collapse',),
+                'fields': (
+                    'vectorized_content', 'is_vectorized', 'is_translated'),
+            }),
+        )
 
 
 @admin.register(Prompt)

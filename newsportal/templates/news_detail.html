@@ -6,7 +6,9 @@
     <h1>{{ news_item.title }}</h1>
     <p><strong>Источник:</strong> {{ news_item.source }}</p>
     <p><strong>Опубликовано:</strong> {{ news_item.published_at }}</p>
-    <p>{{ news_item.content }}</p>
+    <p>{{ news_item.summary }}</p>
+    <a class="btn btn-primary" href="{{ news_item.url }}">Перейти к новости в
+        источнике</a>
     <a href="{% url 'all_news' %}" class="btn btn-primary">Назад ко всем
         новостям</a>
 {% endblock %}
