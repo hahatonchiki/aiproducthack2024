@@ -1,4 +1,3 @@
-import json
 import time
 
 import jwt
@@ -6,8 +5,8 @@ import requests
 
 
 class YandexCloud:
-    def __init__(self, service_account_file):
-        self.data = json.load(open(service_account_file))
+    def __init__(self, creds):
+        self.data = creds
         self.jwt_valid_until = 0
         self.iam_valid_until = 0
         self.jwt_value = None

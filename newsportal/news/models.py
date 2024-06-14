@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
 
 
 class News(models.Model):
@@ -10,11 +9,18 @@ class News(models.Model):
     published_at = models.DateTimeField()
     source = models.CharField(max_length=255)
     url = models.URLField(max_length=255)
-    vectorized_content = ArrayField(models.FloatField(), default=list)
+    vectorized_content = models.TextField(default='')
     lang = models.CharField(max_length=2, default='ru')
     is_vectorized = models.BooleanField(default=False)
     is_translated = models.BooleanField(default=False)
     is_public = models.BooleanField(default=False)
+    is_requested_for_summarization = models.BooleanField(default=False)
+    is_summarized = models.BooleanField(default=False)
+    summarization_request_id = models.CharField(max_length=255, default='')
+    is_scored = models.BooleanField(default=False)
+    is_requested_for_scoring = models.BooleanField(default=False)
+    score_request_id = models.CharField(max_length=255, default='')
+    score = models.FloatField(default=0.0)
 
     def __str__(self):
         return self.title

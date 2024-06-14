@@ -60,22 +60,3 @@ def fetch_news(start_date, end_date):
             break
     news = list(filter(lambda x: end_date >= x.date, news))
     return news, len(news) > 0
-
-
-if __name__ == '__main__':
-    start_date = datetime.strptime("2024-05-24", "%Y-%m-%d")
-    end_date = datetime.strptime("2024-06-01", "%Y-%m-%d")
-    res = fetch_news(start_date, end_date)
-    data = []
-    for newsletter in res[0]:
-        data.append({
-            'Title': newsletter.title,
-            'Content': newsletter.content,
-            'Language': newsletter.language,
-            'Source': newsletter.source,
-            'Date': newsletter.date,
-            'URL': newsletter.url,
-            'Parsed_At': newsletter.parsed_at
-        })
-    df = pd.DataFrame(data)
-    df.to_csv('newsletter_data.csv', index=False)

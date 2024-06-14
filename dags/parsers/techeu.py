@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Tuple
 
 import pandas as pd
@@ -14,6 +14,14 @@ def get_newsletter_text(url):
         return ""
     soup = BeautifulSoup(response.text, 'html.parser')
     return soup.find("div", class_="single-post-content").get_text()
+
+
+def parse_date(date: str) -> datetime:
+    if 'ago' in date:
+        if 'hour' in date:
+            return datetime.now() - timedelta(hours=int(date.split()[0]))
+        return datetime.now()
+    return datetime.strptime(date, "%d %B %Y")
 
 
 def get_from_html(html: str) -> List[NewsLetter]:

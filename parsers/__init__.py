@@ -1,5 +1,6 @@
 class NewsLetter:
-    def __init__(self, title, content, language, source, date, url, parsed_at):
+    def __init__(self, title, content, language, source, date, url,
+                 parsed_at=None):
         self.title = title
         self.content = content
         self.language = language

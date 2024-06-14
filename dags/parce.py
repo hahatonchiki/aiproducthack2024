@@ -11,13 +11,21 @@ from airflow.utils.task_group import TaskGroup
 from airflow.utils.trigger_rule import TriggerRule
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
+from tasks.last_execution_date import last_successful
+from tasks.load import save_csv, upload_to_postgres
+from tasks.cleanup import cleanup_files
+
+dag_id = 'parce'
+
 dag = DAG(
-    "parce",
+    dag_id,
     description="DAG that parses data from the web",
     default_args={"owner": "airflow"},
-    schedule_interval='@daily',
+    schedule_interval='@monthly',
     start_date=datetime(2024, 5, 30),
 )
+
+tmp_dir = "/tmp/newsletters"
 
 
 def import_parsers():
@@ -34,6 +42,8 @@ def import_parsers():
 
 def parse_and_save_to_csv(func, start_date, end_date, file_name):
     res = func(start_date, end_date)
+    if not res:
+        raise Exception('Some error occurred while fetching data')
     data = []
     for newsletter in res[0]:
         data.append({
@@ -44,13 +54,13 @@ def parse_and_save_to_csv(func, start_date, end_date, file_name):
             'source': newsletter.source,
             'published_at': newsletter.date,
         })
-
+    if not data:
+        raise ValueError('No data to save')
     df = pd.DataFrame(data)
-    df.to_csv(f'{file_name}.csv', index=False)
+    save_csv(df, f'{file_name}.csv')
 
 
 parsers = import_parsers()
-dag_id = 'parce'
 
 
 def get_last_monday():
@@ -61,7 +71,8 @@ def get_last_monday():
 
 def get_start_date(task_id):
     last_monday_date = get_last_monday()
-    dates = [last_monday_date]
+    dates = [last_monday_date,
+             last_successful(dag_id, task_id) + timedelta(days=1)]
     return max(dates)
 
 
@@ -89,7 +100,7 @@ with TaskGroup(group_id='parse_and_save_group',
             python_callable=parse_and_save_to_csv,
             op_kwargs={
                 'func': fetch_news_func,
-                'file_name': f'/tmp/newsletters/{{{{ run_id }}}}/{name}.csv',
+                'file_name': f'/tmp/newsletters/{{{{ run_id }}}}/{name}',
                 'start_date': get_start_date(f'parse_and_save_{name}'),
                 'end_date': get_end_of_yesterday()
             },
@@ -101,9 +112,8 @@ with TaskGroup(group_id='parse_and_save_group',
 def combine_csv(**kwargs):
     temp_dir = f'/tmp/newsletters/{kwargs["run_id"]}'
     files = glob.glob(join(temp_dir, "*.csv"))
-    combined_csv = pd.concat([pd.read_csv(f) for f in files])
-    combined_csv.to_csv(join(temp_dir, "combined_newsletters.csv"),
-                        index=False)
+    combined_csv = pd.concat([pd.read_csv(f, index_col='id') for f in files])
+    save_csv(combined_csv, f'{temp_dir}/combined_newsletters.csv')
 
 
 combine_csv_task = PythonOperator(
@@ -116,33 +126,20 @@ combine_csv_task = PythonOperator(
 postgres_hook = PostgresHook(postgres_conn_id='postgres_test')
 engine = postgres_hook.get_sqlalchemy_engine()
 
-
-def save_to_postgres(**kwargs):
-    df_path = f'/tmp/newsletters/{kwargs["run_id"]}/combined_newsletters.csv'
-    df = pd.read_csv(df_path)
-    df.to_sql('news', engine, if_exists='append', index=False)
-
-
 task_upload_to_postgres = PythonOperator(
     task_id='upload_to_postgres',
-    python_callable=save_to_postgres,
+    python_callable=upload_to_postgres,
     trigger_rule=TriggerRule.ONE_SUCCESS,
-    dag=dag
+    dag=dag,
+    op_kwargs={"if_exist": "append",
+               "path": f"{tmp_dir}/{{run_id}}/combined_newsletters.csv",
+               "index": False}
 )
-
-
-def cleanup_files(**kwargs):
-    temp_dir = f'/tmp/newsletters/{kwargs["run_id"]}'
-    files = glob.glob(join(temp_dir, "*"))
-    for f in files:
-        os.remove(f)
-    os.rmdir(temp_dir)
-
 
 task_cleanup_after = PythonOperator(
     task_id='cleanup_after',
     python_callable=cleanup_files,
-    trigger_rule=TriggerRule.ALL_DONE,
+    trigger_rule=TriggerRule.ALL_SUCCESS,
     dag=dag
 )
 
