@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
             reverse_sql='ALTER TABLE news ALTER COLUMN is_vectorized DROP DEFAULT',
         ),
         migrations.RunSQL(
-            sql='ALTER TABLE news ALTER COLUMN is_public SET DEFAULT FALSE',
+            sql='ALTER TABLE news ALTER COLUMN is_public SET DEFAULT TRUE',
             reverse_sql='ALTER TABLE news ALTER COLUMN is_public DROP DEFAULT',
         ),
         migrations.RunSQL(

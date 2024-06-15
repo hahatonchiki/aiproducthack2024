@@ -10,7 +10,8 @@ def upload_to_postgres(path, if_exist, **kwargs):
     cols = ['title', 'content', 'summary', 'published_at', 'source', 'url',
             'vectorized_content', 'lang', 'is_vectorized', 'is_translated',
             'is_public', 'is_requested_for_summarization', 'is_summarized',
-            'summarization_request_id']
+            'summarization_request_id', 'is_requested_for_scoring', 'score',
+            'score_request_id', "is_scored"]
     cols = list(filter(lambda x: x in df.columns, cols))
     df = df[cols]
     df = df.reset_index().rename(columns={'index': 'id'})

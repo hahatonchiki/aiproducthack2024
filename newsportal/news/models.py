@@ -13,7 +13,7 @@ class News(models.Model):
     lang = models.CharField(max_length=2, default='ru')
     is_vectorized = models.BooleanField(default=False)
     is_translated = models.BooleanField(default=False)
-    is_public = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
     is_requested_for_summarization = models.BooleanField(default=False)
     is_summarized = models.BooleanField(default=False)
     summarization_request_id = models.CharField(max_length=255, default='')

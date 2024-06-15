@@ -32,7 +32,6 @@ max_translate = 200
 ycloudcreds = Variable.get("yandexapisecret", deserialize_json=True)
 
 
-
 def translate_and_summarize_news(**kwargs):
     df = load_from_postgres(
         "SELECT * FROM news WHERE (is_translated = False AND lang != 'ru') or is_requested_for_summarization = False")

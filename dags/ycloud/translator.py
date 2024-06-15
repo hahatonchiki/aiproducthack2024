@@ -38,7 +38,7 @@ class Translator:
         self.counter -= 1
 
     async def _translate_text(self, session, text, lang, is_html, source_lang):
-        while self.counter >= 18:
+        while self.counter >= 8:
             await asyncio.sleep(0.1)
         self.counter += 1
         await self._decrease_counter_after_delay()

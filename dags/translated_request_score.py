@@ -12,8 +12,8 @@ from tasks.load import load_from_postgres, save_csv, upload_to_postgres
 from ycloud.gpt import GPT
 
 dag = DAG(
-    "summarize_and_vectorize",
-    "Summarize and vectorize",
+    "translated_request_score",
+    "Get translated and summarized news and request score",
     default_args={"owner": "airflow"},
     schedule_interval='@monthly',
     start_date=datetime(2024, 5, 30),
@@ -25,6 +25,12 @@ engine = postgres_hook.get_sqlalchemy_engine()
 tmp_dir = "/tmp/newsletters"
 
 yandexcreds = Variable.get("yandexapisecret", deserialize_json=True)
+
+themes = Variable.get("themes", deserialize_json=False)
+
+
+def s(x):
+    return f"Определи, к какой из предложенных тем: {themes} относится этот текст: " + x + " и дай численный ответ в виде кода темы, если ни одна тема не подходит, то дай ответ 0"
 
 
 def vectorize_ans_score(**kwargs):
@@ -40,9 +46,10 @@ def vectorize_ans_score(**kwargs):
     to_vectorize["is_vectorized"] = ~to_vectorize["vectorized_content"].isna()
     df.update(to_vectorize)
     to_score = df[df["is_translated"] & ~df["is_scored"]]
-    to_score["score_request_id"] = gpt.generate_series(to_score['content'],
-                                                       "pro",
-                                                       async_=True)
+    to_score["score_request_id"] = gpt.generate_series(
+        to_score["content"].apply(s),
+        "pro",
+        async_=True)
     to_score["is_scored"] = False
     to_score["is_requested_for_scoring"] = to_score["score_request_id"].notna()
     df.update(to_score)
@@ -51,7 +58,7 @@ def vectorize_ans_score(**kwargs):
 
 def load_news(**kwargs):
     df = load_from_postgres(
-        "SELECT * FROM news WHERE is_summarized = False AND is_requested_for_summarization = True")
+        "SELECT * FROM news WHERE (is_summarized = False AND is_requested_for_summarization = True) or (is_requested_for_scoring = TRUE AND is_scored = FALSE)")
     save_csv(df, f'{tmp_dir}/{kwargs["run_id"]}/news.csv')
 
 
